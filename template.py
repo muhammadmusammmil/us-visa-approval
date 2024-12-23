@@ -24,6 +24,7 @@ list_of_files = [
     f"src/{project_name}/utils/__init__.py",
     f"src/{project_name}/utils/main_utils.py",
     "app.py",
+    "requirements.txt",
     "Dockerfile",
     ".dockerignore",
     "demo.py",
