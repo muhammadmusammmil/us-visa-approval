@@ -172,3 +172,6 @@ cython_debug/
 
 #Remove virtual Environmetal
 visaenv/
+
+#Ignore log files
+logs/
