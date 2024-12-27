@@ -175,3 +175,6 @@ visaenv/
 
 #Ignore log files
 logs/
+
+#Ignore catboost info
+notebook/catboost_info/
