@@ -1,11 +1,4 @@
-from src.us_visa_approval.logger import logging
-from src.us_visa_approval.exception import UsvisaException
-import sys
+from src.us_visa_approval.pipeline.training_pipeline import TrainingPipeline
 
-
-logging.info("welcome to our custome log")
-
-try:
-    a = 2/0
-except Exception as e:
-    raise UsvisaException(e, sys)
+obj = TrainingPipeline()
+obj.run_pipeline()

@@ -178,3 +178,6 @@ logs/
 
 #Ignore catboost info
 notebook/catboost_info/
+
+#Ignore Artifact
+artifact/*
