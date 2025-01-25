@@ -3,15 +3,18 @@ from src.us_visa_approval.exception import UsvisaException
 from src.us_visa_approval.logger import logging
 from src.us_visa_approval.componets.data_ingestion import DataIngestion
 from src.us_visa_approval.componets.data_validation import DataValidation
-from src.us_visa_approval.entity.config_entity import DataIngestionConfig
-from src.us_visa_approval.entity.config_entity import DataValidationConfig
-from src.us_visa_approval.entity.artifact_entity import DataIngestionArtifact
-from src.us_visa_approval.entity.artifact_entity import DataValidationArtifact
+from src.us_visa_approval.componets.model_trainer import ModelTrainer
+from src.us_visa_approval.entity.config_entity import DataIngestionConfig, DataValidationConfig, DataTransformationConfig, ModelTrainingConfig
+from src.us_visa_approval.entity.artifact_entity import DataIngestionArtifact,DataValidationArtifact, DataTransformationArtifact, ModelTrainerArtifact
+from src.us_visa_approval.componets.data_transformation import DataTransformation
+
 
 class TrainingPipeline:
     def __init__(self):
         self.data_ingestion_config = DataIngestionConfig()
         self.data_validation_config = DataValidationConfig()
+        self.data_transformation_config = DataTransformationConfig()
+        self.model_training_config = ModelTrainingConfig()
 
     def start_data_ingestion(self) -> DataIngestionArtifact:
         try:
@@ -27,7 +30,7 @@ class TrainingPipeline:
         
 
 
-    def start_data_validation(self, data_ingestion_artifact: DataIngestionArtifact) -> DataIngestionArtifact:
+    def start_data_validation(self, data_ingestion_artifact: DataIngestionArtifact) -> DataValidationArtifact:
         logging.info("Enterd the start_data_validation method of TrainingPipeline class")
 
         try:
@@ -43,9 +46,33 @@ class TrainingPipeline:
             raise UsvisaException(e, sys)from e
         
 
+    def start_data_transformation(self, data_ingestion_artifact: DataIngestionArtifact, data_validation_artifact: DataValidationArtifact) -> DataTransformationArtifact:
+        try:
+            data_transformation = DataTransformation(data_ingestion_artifact=data_ingestion_artifact,
+                                                     data_transformation_config=self.data_transformation_config,
+                                                     data_validation_artifact=data_validation_artifact)
+            
+            data_transformation_artifact = data_transformation.initate_data_transformation()
+            return data_transformation_artifact
+        except Exception as e:
+            raise UsvisaException(e, sys)
+        
+    def start_model_training(self, data_transformation_artifact: DataTransformationArtifact) -> ModelTrainerArtifact:
+        try:
+            model_trainer = ModelTrainer(data_transformation_artifact=data_transformation_artifact,
+                                         model_trainer_config=self.model_training_config)
+            model_trainer_artifact = model_trainer.initate_model_trainer()
+            return model_trainer_artifact
+        
+        except Exception as e:
+            raise UsvisaException(e, sys)
+        
+
     def run_pipeline(self, ) -> None:
         try:
             data_ingestion_artifact = self.start_data_ingestion()
             data_validation_artifact = self.start_data_validation(data_ingestion_artifact=data_ingestion_artifact)
+            data_transformation_artifact = self.start_data_transformation(data_ingestion_artifact=data_ingestion_artifact, data_validation_artifact=data_validation_artifact)
+            model_trainer_artifact = self.start_model_training(data_transformation_artifact=data_transformation_artifact)
         except Exception as e:
             raise UsvisaException(e, sys)

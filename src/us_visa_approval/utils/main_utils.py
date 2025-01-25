@@ -60,7 +60,7 @@ def save_object(filepath: str, obj: object) -> None:
     try:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "wb") as file_obj:
-            dill.dump(file_obj)
+            dill.dump(obj, file_obj)
         logging.info("Exited the save_object method of utils")
     except Exception as e:
         raise UsvisaException(e, sys) from e

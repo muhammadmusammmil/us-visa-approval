@@ -19,4 +19,6 @@ pip install requirements.txt
 
 1. Constants
 2. Entity
-3. 
+3. Components
+4. Pipeline
+5. Main file

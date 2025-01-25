@@ -35,7 +35,7 @@ drop_columns:
 #For data transformation
 num_features:
   - no_of_employees
-  - yr_of_estab
+  - company_age
   - prevailing_wage
 
 or_columns:
