@@ -4,8 +4,10 @@ from src.us_visa_approval.logger import logging
 from src.us_visa_approval.componets.data_ingestion import DataIngestion
 from src.us_visa_approval.componets.data_validation import DataValidation
 from src.us_visa_approval.componets.model_trainer import ModelTrainer
-from src.us_visa_approval.entity.config_entity import DataIngestionConfig, DataValidationConfig, DataTransformationConfig, ModelTrainingConfig
-from src.us_visa_approval.entity.artifact_entity import DataIngestionArtifact,DataValidationArtifact, DataTransformationArtifact, ModelTrainerArtifact
+from src.us_visa_approval.componets.model_evaluation import ModelEvaluation
+from src.us_visa_approval.componets.model_pusher import ModelPusher
+from src.us_visa_approval.entity.config_entity import DataIngestionConfig, DataValidationConfig, DataTransformationConfig, ModelTrainingConfig, ModelEvaluationConfig, ModelPusherConfig
+from src.us_visa_approval.entity.artifact_entity import DataIngestionArtifact,DataValidationArtifact, DataTransformationArtifact, ModelTrainerArtifact, ModelEvaluationArtifact, ModelPusherArtifact
 from src.us_visa_approval.componets.data_transformation import DataTransformation
 
 
@@ -15,6 +17,8 @@ class TrainingPipeline:
         self.data_validation_config = DataValidationConfig()
         self.data_transformation_config = DataTransformationConfig()
         self.model_training_config = ModelTrainingConfig()
+        self.model_evaluation_config = ModelEvaluationConfig()
+        self.model_pusher_config = ModelPusherConfig()
 
     def start_data_ingestion(self) -> DataIngestionArtifact:
         try:
@@ -68,11 +72,42 @@ class TrainingPipeline:
             raise UsvisaException(e, sys)
         
 
+    def start_model_evaluation(self, data_ingestion_artifact: DataIngestionArtifact,
+                               model_trainer_artifact: ModelTrainerArtifact) -> ModelEvaluationArtifact:
+        try:
+            model_evaluation = ModelEvaluation(model_eval_config=self.model_evaluation_config,
+                                               data_ingestion_artifact=data_ingestion_artifact,
+                                               model_trainer_artifact=model_trainer_artifact)
+            model_evaluation_artifact = model_evaluation.initiate_model_evaluation()
+            return model_evaluation_artifact
+        except Exception as e:
+            raise UsvisaException(e, sys)
+        
+    def start_model_pusher(self, model_evaluation_artifact: ModelEvaluationArtifact) -> ModelPusherArtifact:
+
+        try:
+            model_pusher = ModelPusher(model_evaluation_artifact=model_evaluation_artifact,
+                                       model_pusher_config=self.model_pusher_config)
+            
+            model_pusher_artifact = model_pusher.initiate_model_pusher()
+            return model_pusher_artifact
+        except Exception as e:
+            raise UsvisaException(e, sys)
+        
+        
+
     def run_pipeline(self, ) -> None:
         try:
             data_ingestion_artifact = self.start_data_ingestion()
             data_validation_artifact = self.start_data_validation(data_ingestion_artifact=data_ingestion_artifact)
             data_transformation_artifact = self.start_data_transformation(data_ingestion_artifact=data_ingestion_artifact, data_validation_artifact=data_validation_artifact)
             model_trainer_artifact = self.start_model_training(data_transformation_artifact=data_transformation_artifact)
+            model_evaluation_artifact = self.start_model_evaluation(data_ingestion_artifact=data_ingestion_artifact, model_trainer_artifact=model_trainer_artifact)
+
+            if not model_evaluation_artifact.is_model_accepted:
+                logging.info("Model not accepted")
+                return None
+            model_pusher_artifact = self.start_model_pusher(model_evaluation_artifact=model_evaluation_artifact)
+
         except Exception as e:
             raise UsvisaException(e, sys)
