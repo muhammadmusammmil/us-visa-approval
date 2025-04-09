@@ -99,9 +99,9 @@ async def predictRouteClient(request: Request):
 
         status = None
         if value == 1:
-            status = "Visa-approved"
+            status = "Visa Not-approved"
         else:
-            status = "Visa Not-Approved"
+            status = "Visa-approved"
 
         return templates.TemplateResponse(
             "usvisa.html",
